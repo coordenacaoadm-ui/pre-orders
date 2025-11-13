@@ -1,3 +1,4 @@
+
 import serverless from 'serverless-http';
 import express from 'express';
 import morgan from 'morgan';
@@ -14,7 +15,6 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000
 }));
 
-// Helpers
 async function getAccessToken({ code, store_domain }) {
   const url = `https://${store_domain}/admin/oauth/access_token`;
   const { data } = await axios.post(url, {
@@ -43,7 +43,6 @@ async function ensureScriptTag({ access_token, store_domain }) {
   }
 }
 
-// Rotas (as mesmas do Express)
 app.get('/install', (req, res) => {
   const { store_domain } = req.query;
   if (!store_domain) return res.status(400).send('store_domain é obrigatório');
@@ -56,10 +55,6 @@ app.get('/oauth/callback', async (req, res) => {
   if (!code || !store_domain) return res.status(400).send('code/store_domain ausentes');
   try {
     const token = await getAccessToken({ code, store_domain });
-
-    // TODO: salvar token + store_domain em DB externo (Netlify Functions não persistem em memória)
-    // Ex.: await db.upsert({ store_domain, token })
-
     await ensureScriptTag({ access_token: token, store_domain });
     res.send('App instalado! Você pode fechar esta janela.');
   } catch (err) {
@@ -82,10 +77,6 @@ app.post('/webhooks/orders/create', async (req, res) => {
 
     if (hasPreorder) {
       console.log('[webhook] Pedido PREORDER:', order.id || order.number);
-      // TODO:
-      // - tag no pedido
-      // - e-mail de confirmação de prazo
-      // - decrementar preorder_cap no DB
     }
     res.sendStatus(200);
   } catch (e) {
